@@ -538,6 +538,9 @@ static bool ParseFrontendArgs(FrontendOptions &Opts, ArgList &Args,
     Opts.FixitsOutputPath = A->getValue();
   }
 
+  if (const Arg *A = Args.getLastArg(OPT_opt_record_file))
+    Opts.OptRecordFile = A->getValue();
+
   bool IsSIB =
     Opts.RequestedAction == FrontendOptions::EmitSIB ||
     Opts.RequestedAction == FrontendOptions::EmitSIBGen;

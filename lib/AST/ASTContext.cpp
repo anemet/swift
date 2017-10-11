@@ -48,6 +48,7 @@
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/Allocator.h"
 #include "llvm/Support/Compiler.h"
+#include "llvm/Support/YAMLTraits.h"
 #include <algorithm>
 #include <memory>
 

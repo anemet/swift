@@ -1453,6 +1453,7 @@ void Driver::buildActions(SmallVectorImpl<const Action *> &TopLevelActions,
       case types::TY_ImportedModules:
       case types::TY_TBD:
       case types::TY_ModuleTrace:
+      case types::TY_OptRecord:
         // We could in theory handle assembly or LLVM input, but let's not.
         // FIXME: What about LTO?
         Diags.diagnose(SourceLoc(), diag::error_unexpected_input_file,
@@ -2233,6 +2234,22 @@ Job *Driver::buildJobsForAction(Compilation &C, const JobAction *JA,
 
         Output->setAdditionalOutputForType(types::TY_TBD, filename);
       }
+    }
+  }
+
+  if (C.getArgs().hasFlag(options::OPT_fsave_optimization_record,
+                          options::OPT_fno_save_optimization_record, false)) {
+    if (OI.CompilerMode != OutputInfo::Mode::SingleCompile) {
+      llvm::outs()
+          << "Emission of optimization records has been disabled, "
+          << "because it requires a single compiler invocation: "
+          << "consider enabling the -whole-module-optimization flag.\n";
+    } else {
+      auto filename = *getOutputFilenameFromPathArgOrAsTopLevel(
+          OI, C.getArgs(), options::OPT_foptimization_record_file,
+          types::TY_OptRecord, /*TreatAsTopLevelOutput=*/true, "opt.yaml", Buf);
+
+      Output->setAdditionalOutputForType(types::TY_OptRecord, filename);
     }
   }
 

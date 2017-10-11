@@ -75,6 +75,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/Timer.h"
+#include "llvm/Support/ToolOutputFile.h"
+#include "llvm/Support/YAMLTraits.h"
 #include "llvm/Target/TargetMachine.h"
 
 #include <memory>
@@ -1213,6 +1215,21 @@ silOptModeArgStr(SILOptions::SILOptMode mode) {
   }
 }
 
+static std::unique_ptr<llvm::tool_output_file>
+createOptRecordFile(StringRef Filename, DiagnosticEngine &DE) {
+  if (Filename.empty())
+    return nullptr;
+
+  std::error_code EC;
+  auto File = llvm::make_unique<llvm::tool_output_file>(Filename, EC,
+                                                        llvm::sys::fs::F_None);
+  if (EC) {
+    DE.diagnose(SourceLoc(), diag::cannot_open_file, Filename, EC.message());
+    return nullptr;
+  }
+  return File;
+}
+
 int swift::performFrontend(ArrayRef<const char *> Args,
                            const char *Argv0, void *MainAddr,
                            FrontendObserver *observer) {
@@ -1409,6 +1426,13 @@ int swift::performFrontend(ArrayRef<const char *> Args,
     Instance->getASTContext().Stats = StatsReporter.get();
   }
 
+  std::unique_ptr<llvm::tool_output_file> OptRecordFile = createOptRecordFile(
+      Invocation.getFrontendOptions().OptRecordFile, Instance->getDiags());
+  if (OptRecordFile)
+    Instance->getASTContext().OptimizationRecordFile =
+        llvm::make_unique<llvm::yaml::Output>(OptRecordFile->os(),
+                                              &Instance->getSourceMgr());
+
   // The compiler instance has been configured; notify our observer.
   if (observer) {
     observer->configuredCompiler(*Instance);
@@ -1443,6 +1467,9 @@ int swift::performFrontend(ArrayRef<const char *> Args,
       HadError = true;
     }
   }
+
+  if (!HadError && OptRecordFile)
+    OptRecordFile->keep();
 
   return finishDiagProcessing(HadError ? 1 : ReturnValue);
 }

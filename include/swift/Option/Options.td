@@ -331,6 +331,16 @@ def Rpass_missed_EQ : Joined<["-"], "Rpass-missed=">,
   HelpText<"Report missed transformations by optimization passes whose "
            "name matches the given POSIX regular expression">;
 
+def fsave_optimization_record : Flag<["-"], "fsave-optimization-record">,
+  Flags<[FrontendOption]>, HelpText<"Generate a YAML optimization record file">;
+def fno_save_optimization_record : Flag<["-"], "fno-save-optimization-record">,
+  Flags<[FrontendOption]>;
+def foptimization_record_file : Separate<["-"], "foptimization-record-file">,
+  Flags<[FrontendOption]>,
+  HelpText<"Specify the file name of any generated YAML optimization record">;
+def foptimization_record_file_EQ : Joined<["-"], "foptimization-record-file=">,
+  Alias<foptimization_record_file>;
+
 // Platform options.
 def enable_app_extension : Flag<["-"], "application-extension">,
   Flags<[FrontendOption, NoInteractiveOption]>,

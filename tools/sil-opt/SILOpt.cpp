@@ -40,6 +40,8 @@
 #include "llvm/Support/Path.h"
 #include "llvm/Support/Signals.h"
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/ToolOutputFile.h"
+#include "llvm/Support/YAMLTraits.h"
 #include <cstdio>
 using namespace swift;
 
@@ -230,6 +232,11 @@ static cl::opt<std::string> PassRemarksMissed(
              "the given regular expression"),
     cl::Hidden);
 
+static cl::opt<std::string>
+    RemarksFilename("sil-remarks-output",
+                    cl::desc("YAML output filename for pass remarks"),
+                    cl::value_desc("filename"));
+
 static void runCommandLineSelectedPasses(SILModule *Module,
                                          irgen::IRGenModule *IRGenMod) {
   SILPassManager PM(Module, IRGenMod);
@@ -389,6 +396,20 @@ int main(int argc, char **argv) {
   if (CI.setup(Invocation))
     return 1;
 
+  std::unique_ptr<llvm::tool_output_file> OptRecordFile;
+  if (RemarksFilename != "") {
+    std::error_code EC;
+    OptRecordFile = llvm::make_unique<llvm::tool_output_file>(
+        RemarksFilename, EC, llvm::sys::fs::F_None);
+    if (EC) {
+      llvm::errs() << EC.message() << '\n';
+      return 1;
+    }
+    CI.getASTContext().OptimizationRecordFile =
+        llvm::make_unique<llvm::yaml::Output>(OptRecordFile->os(),
+                                              &CI.getASTContext().SourceMgr);
+  }
+
   CI.performSema();
 
   // If parsing produced an error, don't run any passes.
@@ -489,6 +510,9 @@ int main(int argc, char **argv) {
       HadError = true;
     }
   }
+
+  if (!HadError && OptRecordFile)
+    OptRecordFile->keep();
 
   return HadError;
 }

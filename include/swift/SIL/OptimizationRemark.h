@@ -19,14 +19,14 @@
 #ifndef SWIFT_SIL_OPTIMIZATIONREMARKEMITTER_H
 #define SWIFT_SIL_OPTIMIZATIONREMARKEMITTER_H
 
+#include "swift/AST/ASTContext.h"
 #include "swift/Basic/SourceLoc.h"
+#include "swift/SIL/SILBasicBlock.h"
+#include "swift/SIL/SILFunction.h"
 #include "swift/SIL/SILInstruction.h"
 #include "llvm/ADT/StringRef.h"
 
 namespace swift {
-
-class ASTContext;
-class SILFunction;
 
 namespace OptRemark {
 
@@ -60,6 +60,9 @@ template <typename DerivedT> class Remark {
   /// Arguments collected via the streaming interface.
   SmallVector<Argument, 4> Args;
 
+  /// The name of the pass generating the remark.
+  StringRef PassName;
+
   /// Textual identifier for the remark (single-word, camel-case). Can be used
   /// by external tools reading the YAML output file for optimization remarks to
   /// identify the remark.
@@ -68,9 +71,13 @@ template <typename DerivedT> class Remark {
   /// Source location for the diagnostics.
   SourceLoc Location;
 
+  /// The function for the diagnostics.
+  SILFunction *Function;
+
 protected:
   Remark(StringRef Identifier, SILInstruction &I)
-      : Identifier(Identifier), Location(I.getLoc().getSourceLoc()) {}
+      : Identifier(Identifier), Location(I.getLoc().getSourceLoc()),
+        Function(I.getParent()->getParent()) {}
 
 public:
   DerivedT &operator<<(StringRef S) {
@@ -83,8 +90,15 @@ public:
     return *static_cast<DerivedT *>(this);
   }
 
+  StringRef getPassName() const { return PassName; }
+  StringRef getIdentifier() const { return Identifier; }
+  SILFunction *getFunction() const { return Function; }
   SourceLoc getLocation() const { return Location; }
   std::string getMsg() const;
+  Remark<DerivedT> &getRemark() { return *this; }
+  SmallVector<Argument, 4> &getArgs() { return Args; }
+
+  void setPassName(StringRef PN) { PassName = PN; }
 };
 
 /// Remark to report a successful optimization.
@@ -119,8 +133,9 @@ public:
   void emit(T RemarkBuilder, decltype(RemarkBuilder()) * = nullptr) {
     using RemarkT = decltype(RemarkBuilder());
     // Avoid building the remark unless remarks are enabled.
-    if (isEnabled<RemarkT>()) {
+    if (isEnabled<RemarkT>() || Ctx.OptimizationRecordFile) {
       auto R = RemarkBuilder();
+      R.setPassName(PassName);
       emit(R);
     }
   }
