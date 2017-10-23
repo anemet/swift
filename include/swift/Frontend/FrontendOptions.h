@@ -257,10 +257,6 @@ public:
   /// The path to which we should output a loaded module trace file.
   std::string LoadedModuleTracePath;
 
-  /// The name of the file to which the backend should save YAML optimization
-  /// records.
-  std::string OptRecordFile;
-
   /// The path to which we should output a TBD file.
   std::string TBDPath;
 

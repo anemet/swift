@@ -898,7 +898,7 @@ public:
     SILLoopAnalysis *LA = PM->getAnalysis<SILLoopAnalysis>();
     SideEffectAnalysis *SEA = PM->getAnalysis<SideEffectAnalysis>();
     OptRemark::Emitter ORE(DEBUG_TYPE,
-                           getFunction()->getModule().getASTContext());
+                           getFunction()->getModule());
 
     if (getOptions().InlineThreshold == 0) {
       return;

@@ -19,11 +19,11 @@
 #ifndef SWIFT_SIL_OPTIMIZATIONREMARKEMITTER_H
 #define SWIFT_SIL_OPTIMIZATIONREMARKEMITTER_H
 
-#include "swift/AST/ASTContext.h"
 #include "swift/Basic/SourceLoc.h"
 #include "swift/SIL/SILBasicBlock.h"
 #include "swift/SIL/SILFunction.h"
 #include "swift/SIL/SILInstruction.h"
+#include "swift/SIL/SILModule.h"
 #include "llvm/ADT/StringRef.h"
 
 namespace swift {
@@ -113,7 +113,7 @@ struct RemarkMissed : public Remark<RemarkMissed> {
 /// Used to emit the remarks.  Passes reporting remarks should create an
 /// instance of this.
 class Emitter {
-  ASTContext &Ctx;
+  SILModule &Module;
   std::string PassName;
   bool PassedEnabled;
   bool MissedEnabled;
@@ -124,7 +124,7 @@ class Emitter {
   template <typename RemarkT> bool isEnabled();
 
 public:
-  Emitter(StringRef PassName, ASTContext &Ctx);
+  Emitter(StringRef PassName, SILModule &M);
 
   /// \brief Take a lambda that returns a remark which will be emitted.  The
   /// lambda is not evaluated unless remarks are enabled.  Second argument is
@@ -133,7 +133,7 @@ public:
   void emit(T RemarkBuilder, decltype(RemarkBuilder()) * = nullptr) {
     using RemarkT = decltype(RemarkBuilder());
     // Avoid building the remark unless remarks are enabled.
-    if (isEnabled<RemarkT>() || Ctx.OptimizationRecordFile) {
+    if (isEnabled<RemarkT>() || Module.getOptRecordFile()) {
       auto R = RemarkBuilder();
       R.setPassName(PassName);
       emit(R);

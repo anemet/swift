@@ -56,30 +56,32 @@ template <typename DerivedT> std::string Remark<DerivedT>::getMsg() const {
   return OS.str();
 }
 
-Emitter::Emitter(StringRef PassName, ASTContext &Ctx)
-    : Ctx(Ctx), PassName(PassName),
+Emitter::Emitter(StringRef PassName, SILModule &M)
+    : Module(M), PassName(PassName),
       PassedEnabled(
-          Ctx.LangOpts.OptimizationRemarkPassedPattern &&
-          Ctx.LangOpts.OptimizationRemarkPassedPattern->match(PassName)),
+          M.getASTContext().LangOpts.OptimizationRemarkPassedPattern &&
+          M.getASTContext().LangOpts.OptimizationRemarkPassedPattern->match(
+              PassName)),
       MissedEnabled(
-          Ctx.LangOpts.OptimizationRemarkMissedPattern &&
-          Ctx.LangOpts.OptimizationRemarkMissedPattern->match(PassName)) {}
+          M.getASTContext().LangOpts.OptimizationRemarkMissedPattern &&
+          M.getASTContext().LangOpts.OptimizationRemarkMissedPattern->match(
+              PassName)) {}
 
 template <typename RemarkT, typename... ArgTypes>
-static void emitRemark(ASTContext &Ctx, const Remark<RemarkT> &R,
+static void emitRemark(SILModule &Module, const Remark<RemarkT> &R,
                        Diag<ArgTypes...> ID, bool DiagEnabled) {
-  if (Ctx.OptimizationRecordFile)
-    *Ctx.OptimizationRecordFile << const_cast<Remark<RemarkT> &>(R);
+  if (Module.getOptRecordFile())
+    *Module.getOptRecordFile() << const_cast<Remark<RemarkT> &>(R);
   if (DiagEnabled)
-    Ctx.Diags.diagnose(R.getLocation(), ID, R.getMsg());
+    Module.getASTContext().Diags.diagnose(R.getLocation(), ID, R.getMsg());
 }
 
 void Emitter::emit(const RemarkPassed &R) {
-  emitRemark(Ctx, R, diag::opt_remark_passed, isEnabled<RemarkPassed>());
+  emitRemark(Module, R, diag::opt_remark_passed, isEnabled<RemarkPassed>());
 }
 
 void Emitter::emit(const RemarkMissed &R) {
-  emitRemark(Ctx, R, diag::opt_remark_missed, isEnabled<RemarkMissed>());
+  emitRemark(Module, R, diag::opt_remark_missed, isEnabled<RemarkMissed>());
 }
 
 namespace llvm {
@@ -130,8 +132,8 @@ template <> struct MappingTraits<SourceLoc> {
 };
 
 // Implement this as a mapping for now to get proper quotation for the value.
-template <> struct MappingTraits<Argument> {
-  static void mapping(IO &io, Argument &A) {
+template <> struct MappingTraits<OptRemark::Argument> {
+  static void mapping(IO &io, OptRemark::Argument &A) {
     assert(io.outputting() && "input not yet implemented");
     io.mapRequired(A.Key.data(), A.Val);
     if (A.Loc.isValid())
@@ -142,4 +144,4 @@ template <> struct MappingTraits<Argument> {
 } // end namespace yaml
 } // end namespace llvm
 
-LLVM_YAML_IS_SEQUENCE_VECTOR(Argument)
+LLVM_YAML_IS_SEQUENCE_VECTOR(OptRemark::Argument)

@@ -40,12 +40,6 @@
 #include <utility>
 #include <vector>
 
-namespace llvm {
-namespace yaml {
-class Output;
-} // end namespace yaml
-} // end namespace llvm
-
 namespace clang {
   class Decl;
   class MacroInfo;
@@ -260,9 +254,6 @@ public:
 
   /// Optional table of counters to report, nullptr when not collecting.
   UnifiedStatsReporter *Stats = nullptr;
-
-  /// If non-null, the YAML file where remarks should be recorded.
-  std::unique_ptr<llvm::yaml::Output> OptimizationRecordFile;
 
 private:
   /// \brief The current generation number, which reflects the number of

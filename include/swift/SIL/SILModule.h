@@ -46,6 +46,12 @@
 #include "llvm/Support/raw_ostream.h"
 #include <functional>
 
+namespace llvm {
+namespace yaml {
+class Output;
+} // end namespace yaml
+} // end namespace llvm
+
 namespace swift {
   class AnyFunctionType;
   class ASTContext;
@@ -177,6 +183,9 @@ private:
 
   // The list of SILCoverageMaps in the module.
   CoverageMapListType coverageMaps;
+
+  /// If non-null, the YAML file where remarks should be recorded.
+  std::unique_ptr<llvm::yaml::Output> OptRecordFile;
 
   /// This is a cache of intrinsic Function declarations to numeric ID mappings.
   llvm::DenseMap<Identifier, IntrinsicInfo> IntrinsicIDCache;
@@ -448,7 +457,12 @@ public:
   }
   iterator_range<coverage_map_const_iterator> getCoverageMaps() const {
     return {coverageMaps.begin(), coverageMaps.end()};
- }
+  }
+
+  llvm::yaml::Output *getOptRecordFile() {
+    return OptRecordFile.get();
+  }
+  void setOptRecordFile(std::unique_ptr<llvm::yaml::Output> &&O);
 
   /// Look for a global variable by name.
   ///
