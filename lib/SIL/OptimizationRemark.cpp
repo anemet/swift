@@ -70,8 +70,8 @@ Emitter::Emitter(StringRef PassName, SILModule &M)
 template <typename RemarkT, typename... ArgTypes>
 static void emitRemark(SILModule &Module, const Remark<RemarkT> &R,
                        Diag<ArgTypes...> ID, bool DiagEnabled) {
-  if (Module.getOptRecordFile())
-    *Module.getOptRecordFile() << const_cast<Remark<RemarkT> &>(R);
+  if (auto *ORF = Module.getOptions().OptRecordFile.get())
+    *ORF << const_cast<Remark<RemarkT> &>(R);
   if (DiagEnabled)
     Module.getASTContext().Diags.diagnose(R.getLocation(), ID, R.getMsg());
 }

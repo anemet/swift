@@ -781,7 +781,3 @@ void SILModule::serialize() {
   SerializeSILAction();
   setSerialized();
 }
-
-void SILModule::setOptRecordFile(std::unique_ptr<llvm::yaml::Output> &&O) {
-  OptRecordFile = std::move(O);
-}

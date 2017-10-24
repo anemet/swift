@@ -133,7 +133,7 @@ public:
   void emit(T RemarkBuilder, decltype(RemarkBuilder()) * = nullptr) {
     using RemarkT = decltype(RemarkBuilder());
     // Avoid building the remark unless remarks are enabled.
-    if (isEnabled<RemarkT>() || Module.getOptRecordFile()) {
+    if (isEnabled<RemarkT>() || Module.getOptions().OptRecordFile) {
       auto R = RemarkBuilder();
       R.setPassName(PassName);
       emit(R);

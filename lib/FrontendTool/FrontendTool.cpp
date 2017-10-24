@@ -509,21 +509,6 @@ static void countStatsPostSILOpt(UnifiedStatsReporter &Stats,
   C.NumSILOptGlobalVariables = Module.getSILGlobalList().size();
 }
 
-static std::unique_ptr<llvm::tool_output_file>
-createOptRecordFile(StringRef Filename, DiagnosticEngine &DE) {
-  if (Filename.empty())
-    return nullptr;
-
-  std::error_code EC;
-  auto File = llvm::make_unique<llvm::tool_output_file>(Filename, EC,
-                                                        llvm::sys::fs::F_None);
-  if (EC) {
-    DE.diagnose(SourceLoc(), diag::cannot_open_file, Filename, EC.message());
-    return nullptr;
-  }
-  return File;
-}
-
 /// Performs the compile requested by the user.
 /// \param Instance Will be reset after performIRGeneration when the verifier
 ///                 mode is NoVerify and there were no errors.
@@ -765,9 +750,9 @@ static bool performCompile(CompilerInstance &Instance,
     return Context.hadError();
   }
 
-  const auto &SILOpts = Invocation.getSILOptions();
   if (!opts.TBDPath.empty()) {
-    auto hasMultipleIRGenThreads = SILOpts.NumThreads > 1;
+    const auto &silOpts = Invocation.getSILOptions();
+    auto hasMultipleIRGenThreads = silOpts.NumThreads > 1;
     auto installName = opts.TBDInstallName.empty()
                            ? "lib" + Invocation.getModuleName().str() + ".dylib"
                            : opts.TBDInstallName;
@@ -841,12 +826,6 @@ static bool performCompile(CompilerInstance &Instance,
     }
     return Context.hadError();
   }
-
-  std::unique_ptr<llvm::tool_output_file> OptRecordFile =
-      createOptRecordFile(SILOpts.OptRecordFile, Instance.getDiags());
-  if (OptRecordFile)
-    SM->setOptRecordFile(llvm::make_unique<llvm::yaml::Output>(
-        OptRecordFile->os(), &Instance.getSourceMgr()));
 
   // Perform "stable" optimizations that are invariant across compiler versions.
   if (Action == FrontendOptions::MergeModules) {
@@ -1082,8 +1061,8 @@ static bool performCompile(CompilerInstance &Instance,
         !astGuaranteedToCorrespondToSIL)
       break;
 
-    const auto &SILOpts = Invocation.getSILOptions();
-    auto hasMultipleIRGenThreads = SILOpts.NumThreads > 1;
+    const auto &silOpts = Invocation.getSILOptions();
+    auto hasMultipleIRGenThreads = silOpts.NumThreads > 1;
     bool error;
     if (PrimarySourceFile)
       error = validateTBD(PrimarySourceFile, *IRModule, hasMultipleIRGenThreads,
@@ -1234,6 +1213,21 @@ silOptModeArgStr(SILOptions::SILOptMode mode) {
  default:
    return "Onone";
   }
+}
+
+static std::unique_ptr<llvm::tool_output_file>
+createOptRecordFile(StringRef Filename, DiagnosticEngine &DE) {
+  if (Filename.empty())
+    return nullptr;
+
+  std::error_code EC;
+  auto File = llvm::make_unique<llvm::tool_output_file>(Filename, EC,
+                                                        llvm::sys::fs::F_None);
+  if (EC) {
+    DE.diagnose(SourceLoc(), diag::cannot_open_file, Filename, EC.message());
+    return nullptr;
+  }
+  return File;
 }
 
 int swift::performFrontend(ArrayRef<const char *> Args,
@@ -1431,6 +1425,13 @@ int swift::performFrontend(ArrayRef<const char *> Args,
     // accumulated work on completion (mostly: TypeChecker).
     Instance->getASTContext().Stats = StatsReporter.get();
   }
+
+  std::unique_ptr<llvm::tool_output_file> OptRecordFile = createOptRecordFile(
+      Invocation.getFrontendOptions().OptRecordFile, Instance->getDiags());
+  if (OptRecordFile)
+    Invocation.getSILOptions().OptRecordFile =
+        llvm::make_unique<llvm::yaml::Output>(OptRecordFile->os(),
+                                              &Instance->getSourceMgr());
 
   // The compiler instance has been configured; notify our observer.
   if (observer) {

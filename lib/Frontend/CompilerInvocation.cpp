@@ -538,6 +538,9 @@ static bool ParseFrontendArgs(FrontendOptions &Opts, ArgList &Args,
     Opts.FixitsOutputPath = A->getValue();
   }
 
+  if (const Arg *A = Args.getLastArg(OPT_opt_record_file))
+    Opts.OptRecordFile = A->getValue();
+
   bool IsSIB =
     Opts.RequestedAction == FrontendOptions::EmitSIB ||
     Opts.RequestedAction == FrontendOptions::EmitSIBGen;
@@ -1303,9 +1306,6 @@ static bool ParseSILArgs(SILOptions &Opts, ArgList &Args,
   Opts.EnableMandatorySemanticARCOpts |=
       !Args.hasArg(OPT_disable_mandatory_semantic_arc_opts);
   Opts.EnableLargeLoadableTypes |= Args.hasArg(OPT_enable_large_loadable_types);
-
-  if (const Arg *A = Args.getLastArg(OPT_opt_record_file))
-    Opts.OptRecordFile = A->getValue();
 
   if (Args.hasArg(OPT_debug_on_sil)) {
     // Derive the name of the SIL file for debugging from

@@ -25,6 +25,12 @@
 #include <string>
 #include <climits>
 
+namespace llvm {
+namespace yaml {
+class Output;
+} // end namespace yaml
+} // end namespace llvm
+
 namespace swift {
 
 class SILOptions {
@@ -152,7 +158,10 @@ public:
 
   /// The name of the file to which the backend should save YAML optimization
   /// records.
-  std::string OptRecordFile;
+  ///
+  /// FIXME: this could be a unique_ptr but CompilerInvocation containing
+  /// SILOptions is currently copied into Compiler Instance.
+  std::shared_ptr<llvm::yaml::Output> OptRecordFile;
 
   SILOptions() {}
 
