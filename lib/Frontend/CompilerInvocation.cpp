@@ -538,7 +538,7 @@ static bool ParseFrontendArgs(FrontendOptions &Opts, ArgList &Args,
     Opts.FixitsOutputPath = A->getValue();
   }
 
-  if (const Arg *A = Args.getLastArg(OPT_opt_record_file))
+  if (const Arg *A = Args.getLastArg(OPT_save_optimization_record_path))
     Opts.OptRecordFile = A->getValue();
 
   bool IsSIB =

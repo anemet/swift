@@ -1430,8 +1430,8 @@ int swift::performFrontend(ArrayRef<const char *> Args,
       Invocation.getFrontendOptions().OptRecordFile, Instance->getDiags());
   if (OptRecordFile)
     Invocation.getSILOptions().OptRecordFile =
-        llvm::make_unique<llvm::yaml::Output>(OptRecordFile->os(),
-                                              &Instance->getSourceMgr());
+        std::make_shared<llvm::yaml::Output>(OptRecordFile->os(),
+                                             &Instance->getSourceMgr());
 
   // The compiler instance has been configured; notify our observer.
   if (observer) {

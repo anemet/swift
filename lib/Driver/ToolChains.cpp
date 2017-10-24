@@ -452,7 +452,7 @@ ToolChain::constructInvocation(const CompileJobAction &job,
   const std::string &OptRecordPath =
       context.Output.getAdditionalOutputForType(types::TY_OptRecord);
   if (!OptRecordPath.empty()) {
-    Arguments.push_back("-opt-record-file");
+    Arguments.push_back("-save-optimization-record-path");
     Arguments.push_back(OptRecordPath.c_str());
   }
 

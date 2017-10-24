@@ -21,12 +21,13 @@
 
 #include "swift/Basic/SourceLoc.h"
 #include "swift/SIL/SILBasicBlock.h"
-#include "swift/SIL/SILFunction.h"
 #include "swift/SIL/SILInstruction.h"
 #include "swift/SIL/SILModule.h"
 #include "llvm/ADT/StringRef.h"
 
 namespace swift {
+
+class SILFunction;
 
 namespace OptRemark {
 

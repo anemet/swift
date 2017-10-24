@@ -233,7 +233,7 @@ static cl::opt<std::string> PassRemarksMissed(
     cl::Hidden);
 
 static cl::opt<std::string>
-    RemarksFilename("sil-remarks-output",
+    RemarksFilename("save-optimization-record-path",
                     cl::desc("YAML output filename for pass remarks"),
                     cl::value_desc("filename"));
 
@@ -405,9 +405,8 @@ int main(int argc, char **argv) {
       llvm::errs() << EC.message() << '\n';
       return 1;
     }
-    CI.getASTContext().OptimizationRecordFile =
-        llvm::make_unique<llvm::yaml::Output>(OptRecordFile->os(),
-                                              &CI.getASTContext().SourceMgr);
+    CI.getSILOptions().OptRecordFile = std::make_shared<llvm::yaml::Output>(
+        OptRecordFile->os(), &CI.getASTContext().SourceMgr);
   }
 
   CI.performSema();

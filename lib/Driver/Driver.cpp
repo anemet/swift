@@ -2237,8 +2237,8 @@ Job *Driver::buildJobsForAction(Compilation &C, const JobAction *JA,
     }
   }
 
-  if (C.getArgs().hasFlag(options::OPT_fsave_optimization_record,
-                          options::OPT_fno_save_optimization_record, false)) {
+  if (C.getArgs().hasArg(options::OPT_save_optimization_record,
+                         options::OPT_save_optimization_record_path)) {
     if (OI.CompilerMode != OutputInfo::Mode::SingleCompile) {
       llvm::outs()
           << "Emission of optimization records has been disabled, "
@@ -2246,7 +2246,7 @@ Job *Driver::buildJobsForAction(Compilation &C, const JobAction *JA,
           << "consider enabling the -whole-module-optimization flag.\n";
     } else {
       auto filename = *getOutputFilenameFromPathArgOrAsTopLevel(
-          OI, C.getArgs(), options::OPT_foptimization_record_file,
+          OI, C.getArgs(), options::OPT_save_optimization_record_path,
           types::TY_OptRecord, /*TreatAsTopLevelOutput=*/true, "opt.yaml", Buf);
 
       Output->setAdditionalOutputForType(types::TY_OptRecord, filename);

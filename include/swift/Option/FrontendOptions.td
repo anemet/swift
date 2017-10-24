@@ -448,7 +448,4 @@ def validate_tbd_against_ir_EQ: Joined<["-"], "validate-tbd-against-ir=">,
 def fix_string_substring_conversion: Flag<["-"], "fix-string-substring-conversion">,
     HelpText<"Emit a fix-it to append '[]' to String expressions when converting to Substring.">;
 
-def opt_record_file : Separate<["-"], "opt-record-file">,
-  HelpText<"Specify the file name of any generated YAML optimization record">;
-
 } // end let Flags = [FrontendOption, NoDriverOption, HelpHidden]

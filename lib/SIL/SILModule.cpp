@@ -27,7 +27,6 @@
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Support/Debug.h"
-#include "llvm/Support/YAMLTraits.h"
 #include <functional>
 using namespace swift;
 using namespace Lowering;
@@ -781,3 +780,4 @@ void SILModule::serialize() {
   SerializeSILAction();
   setSerialized();
 }
+
